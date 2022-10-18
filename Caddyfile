@@ -1,1 +1,11 @@
-rushsteve1.us {}
+rushsteve1.us {
+    reverse_proxy :9901 {
+        transport fastcgi
+    }
+}
+
+bot.rushsteve1.us {
+    reverse_proxy :9902 {
+        transport fastcgi
+    }
+}

@@ -17,3 +17,9 @@
 # Don't keep config files
 config*.json
 !config.example.json
+
+# Built executables
+overseer/overseer
+socon/socon
+swissarmybot/swissarmybot
+webserver/webserver

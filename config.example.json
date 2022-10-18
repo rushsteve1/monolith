@@ -1,1 +1,19 @@
-{}
+{
+    "database": {
+        "uri": "localhost:5432",
+        "user": "postgres",
+        "password": "postgres"
+    },
+    "overseer": {
+        "addr": ":9900",
+        "fcgi": false,
+        "rpc": true
+    },
+    "webserver": {
+        "addr": ":9901"
+    },
+    "swissarmybot": {
+        "addr": ":9902",
+        "token": ""
+    }
+}

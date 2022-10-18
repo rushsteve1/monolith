@@ -1,0 +1,21 @@
+{{ define "layout" }}
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steve's Website</title>
+</head>
+
+<body>
+    <header>
+        <h1><a href="/">Steve's Website</a></h1>
+    </header>
+    <main role="main">
+        {{ block "main" . }}{{ end }}
+    </main>
+    <footer></footer>
+</body>
+
+</html>
+{{ end }}
