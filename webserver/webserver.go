@@ -3,13 +3,10 @@ package webserver
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 
 	"rushsteve1.us/monolith/shared"
 )
-
-const Name = "WebServer"
 
 type WebServer struct {
 	Config shared.Config
@@ -17,27 +14,36 @@ type WebServer struct {
 }
 
 func (ws *WebServer) Serve(ctx context.Context) error {
+	var err error
+	err = loadTemplates()
+	if err != nil {
+		return err
+	}
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/",
 		func(w http.ResponseWriter, r *http.Request) {
-			io.WriteString(w, "Hello World\n")
+			err := templates.ExecuteTemplate(w, "index.html", nil)
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+			}
 		})
 
 	return shared.ServeHelper(mux, ws)
 }
 
-func (ws *WebServer) Addr() string {
+func (ws WebServer) Addr() string {
 	return ws.Config.WebServer.Addr
 }
 
-func (ws *WebServer) Name() string {
-	return Name
+func (ws WebServer) Name() string {
+	return "WebServer"
 }
 
-func (ws *WebServer) UseFcgi() bool {
+func (ws WebServer) UseFcgi() bool {
 	return ws.Fcgi
 }
 
-func (ws *WebServer) String() string {
+func (ws WebServer) String() string {
 	return fmt.Sprintf("%s on %s", ws.Name(), ws.Addr())
 }

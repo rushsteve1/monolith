@@ -1,4 +1,4 @@
-package webserver
+package main
 
 import (
 	"rushsteve1.us/monolith/shared"
@@ -6,9 +6,8 @@ import (
 )
 
 func main() {
-	shared.MainHelper(
-		&ws.WebServer{
-			Config: shared.ConfigFromArgs(),
-			Fcgi:   false},
-		ws.Name)
+	serv := ws.WebServer{
+		Config: shared.ConfigFromArgs(),
+		Fcgi:   false}
+	shared.MainHelper(&serv, serv.Name())
 }

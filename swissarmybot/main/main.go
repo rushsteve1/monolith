@@ -6,9 +6,8 @@ import (
 )
 
 func main() {
-	shared.MainHelper(
-		&sab.SwissArmyBot{
-			Config: shared.ConfigFromArgs(),
-			Fcgi:   false},
-		sab.Name)
+	serv := sab.SwissArmyBot{
+		Config: shared.ConfigFromArgs(),
+		Fcgi:   false}
+	shared.MainHelper(&serv, serv.Name())
 }

@@ -9,8 +9,6 @@ import (
 	"rushsteve1.us/monolith/shared"
 )
 
-const Name = "SwissArmyBot"
-
 type SwissArmyBot struct {
 	Config shared.Config
 	Fcgi   bool
@@ -26,18 +24,18 @@ func (sab *SwissArmyBot) Serve(ctx context.Context) error {
 	return shared.ServeHelper(mux, sab)
 }
 
-func (sab *SwissArmyBot) Addr() string {
+func (sab SwissArmyBot) Addr() string {
 	return sab.Config.SwissArmyBot.Addr
 }
 
-func (sab *SwissArmyBot) Name() string {
-	return Name
+func (sab SwissArmyBot) Name() string {
+	return "SwissArmyBot"
 }
 
-func (sab *SwissArmyBot) UseFcgi() bool {
+func (sab SwissArmyBot) UseFcgi() bool {
 	return sab.Fcgi
 }
 
-func (sab *SwissArmyBot) String() string {
+func (sab SwissArmyBot) String() string {
 	return fmt.Sprintf("%s on %s", sab.Name(), sab.Addr())
 }

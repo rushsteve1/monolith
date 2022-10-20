@@ -11,6 +11,22 @@
             "mode": "auto",
             "program": "${workspaceFolder}/overseer",
             "args": ["${workspaceFolder}/config.example.json"]
+        },
+        {
+            "name": "Launch WebServer",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/webserver/main",
+            "args": ["${workspaceFolder}/config.example.json"]
+        },
+        {
+            "name": "Launch SwissArmyBot",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/swissarmybot/main",
+            "args": ["${workspaceFolder}/config.example.json"]
         }
     ]
 }
