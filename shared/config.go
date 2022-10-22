@@ -2,6 +2,7 @@ package shared
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -12,6 +13,10 @@ type DatabaseCfg struct {
 	Uri      string `json:"uri"`
 	User     string `json:"user"`
 	Password string `json:"password"`
+}
+
+func (db DatabaseCfg) String() string {
+	return fmt.Sprintf("host=%s user=%s password=%s sslmode=disable", db.Uri, db.User, db.Password)
 }
 
 type OverseerCfg struct {

@@ -2,6 +2,7 @@ package webserver
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
 
@@ -9,8 +10,9 @@ import (
 )
 
 type WebServer struct {
-	Config shared.Config
-	Fcgi   bool
+	Config   shared.Config
+	Fcgi     bool
+	Database *sql.DB
 }
 
 func (ws *WebServer) Serve(ctx context.Context) error {

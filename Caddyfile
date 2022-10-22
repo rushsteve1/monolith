@@ -1,10 +1,15 @@
 rushsteve1.us {
+    encoding zstd gzip
+
+    redir /monolith https://github.com/rushsteve1/monolith permanent
+
     reverse_proxy :9901 {
         transport fastcgi
     }
 }
 
 bot.rushsteve1.us {
+    encoding zstd gzip
     reverse_proxy :9902 {
         transport fastcgi
     }

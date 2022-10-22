@@ -2,6 +2,7 @@ package swissarmybot
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,8 +11,9 @@ import (
 )
 
 type SwissArmyBot struct {
-	Config shared.Config
-	Fcgi   bool
+	Config   shared.Config
+	Fcgi     bool
+	Database *sql.DB
 }
 
 func (sab *SwissArmyBot) Serve(ctx context.Context) error {

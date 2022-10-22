@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS blog (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    body TEXT NOT NULL,
+    inserted_at DATETIME NOT NULL DEFAULT now(),
+    updated_at DATETIME NOT NULL DEFAULT now(),
+);
+
+CREATE TABLE IF NOT EXISTS kayvee (
+    key VARCHAR(64) PRIMARY KEY,
+    value JSONB,
+);

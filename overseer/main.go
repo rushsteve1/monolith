@@ -22,8 +22,8 @@ func main() {
 	services := []shared.Service{
 		&Overseer{Config: cfg},
 		&Cron{Config: cfg},
-		&ws.WebServer{Config: cfg, Fcgi: cfg.Overseer.Fcgi},
-		&sab.SwissArmyBot{Config: cfg, Fcgi: cfg.Overseer.Fcgi},
+		&ws.WebServer{Config: cfg, Fcgi: cfg.Overseer.Fcgi, Database: nil},
+		&sab.SwissArmyBot{Config: cfg, Fcgi: cfg.Overseer.Fcgi, Database: nil},
 	}
 
 	for _, serv := range services {
