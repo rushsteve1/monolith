@@ -36,10 +36,3 @@ func ServeHelper(mux *http.ServeMux, serv Service) error {
 
 	return fmt.Errorf("%s exited unexpectedly", serv.Name())
 }
-
-func LogWrapper(handler http.Handler, serv Service) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.WithFields(log.Fields{"url": r.URL, "method": r.Method, "remote": r.RemoteAddr, "service": serv.Name()}).Info("HTTP Request")
-		handler.ServeHTTP(w, r)
-	})
-}

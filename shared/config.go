@@ -3,19 +3,22 @@ package shared
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	log "github.com/sirupsen/logrus"
 )
 
 type DatabaseCfg struct {
-	Uri      string `json:"uri"`
-	User     string `json:"user"`
-	Password string `json:"password"`
+	UseSqlite bool   `json:"sqlite"`
+	Uri       string `json:"uri"`
+	User      string `json:"user"`
+	Password  string `json:"password"`
 }
 
 func (db DatabaseCfg) String() string {
+	if db.UseSqlite {
+		return db.Uri
+	}
 	return fmt.Sprintf("host=%s user=%s password=%s sslmode=disable", db.Uri, db.User, db.Password)
 }
 
@@ -31,10 +34,13 @@ type SwissArmyBotCfg struct {
 }
 
 type WebServerCfg struct {
-	Addr string `json:"addr"`
+	Addr       string `json:"addr"`
+	CgiPath    string `json:"cgipath"`
+	StaticPath string `json:"staticpath"`
 }
 
 type Config struct {
+	UseCaddy     bool            `json:"caddy"`
 	Database     DatabaseCfg     `json:"database"`
 	Overseer     OverseerCfg     `json:"overseer"`
 	SwissArmyBot SwissArmyBotCfg `json:"swissarmybot"`
@@ -44,7 +50,7 @@ type Config struct {
 func LoadConfig(path string) Config {
 	var c Config
 
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatal("Error loading config: ", err)
 	}

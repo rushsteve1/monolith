@@ -1,5 +1,7 @@
 {
+    "caddy": true,
     "database": {
+        "sqlite": false,
         "uri": "localhost:5432",
         "user": "postgres",
         "password": "postgres"
@@ -10,7 +12,9 @@
         "rpc": true
     },
     "webserver": {
-        "addr": ":9901"
+        "addr": ":9901",
+        "cgipath": "/var/www/monolith/cgi-bin",
+        "staticpath": "/var/www/monolith/static"
     },
     "swissarmybot": {
         "addr": ":9902",
