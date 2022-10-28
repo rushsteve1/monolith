@@ -21,6 +21,7 @@ type Overseer struct {
 func (ov *Overseer) Serve(ctx context.Context) error {
 	if ov.Config.Overseer.Rpc {
 		rpcobj := new(OverseerRpc)
+		rpcobj.Config = ov.Config
 		rpc.RegisterName("Overseer", rpcobj)
 		rpc.HandleHTTP()
 
@@ -29,13 +30,11 @@ func (ov *Overseer) Serve(ctx context.Context) error {
 			log.Fatal("Error starting Overseer RPC: ", err)
 		}
 
-		handler := shared.LogWrapper(http.DefaultServeMux, ov)
-
 		log.Info("Overseer RPC server started on ", ov.Config.Overseer.Addr)
 		if ov.Config.Overseer.Fcgi {
-			return fcgi.Serve(listener, handler)
+			return fcgi.Serve(listener, nil)
 		} else {
-			return http.Serve(listener, handler)
+			return http.Serve(listener, nil)
 		}
 	}
 	return nil

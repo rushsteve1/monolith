@@ -4,8 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	stdlog "log"
 	"net/http"
 	"net/http/cgi"
+	"path/filepath"
 
 	log "github.com/sirupsen/logrus"
 	"rushsteve1.us/monolith/shared"
@@ -19,6 +21,11 @@ type WebServer struct {
 
 func (ws *WebServer) Serve(ctx context.Context) error {
 	err := loadTemplates()
+	if err != nil {
+		return err
+	}
+
+	err = createTables(ws.Database, ctx)
 	if err != nil {
 		return err
 	}
@@ -37,10 +44,17 @@ func (ws *WebServer) Serve(ctx context.Context) error {
 			}
 		})
 
-	mux.HandleFunc("/cgi-bin/", func(w http.ResponseWriter, r *http.Request) {
-		h := &cgi.Handler{Dir: ws.Config.WebServer.CgiPath}
-		h.ServeHTTP(w, r)
-	})
+	mux.Handle(
+		"/cgi-bin/",
+		http.StripPrefix("/cgi-bin/",
+			http.HandlerFunc(
+				func(w http.ResponseWriter, r *http.Request) {
+					path := filepath.Join(ws.Config.WebServer.CgiPath, r.URL.Path)
+					l := stdlog.New(log.StandardLogger().WriterLevel(log.ErrorLevel), "", 0)
+					h := &cgi.Handler{Path: path, Root: "/cgi-bin/", Logger: l}
+					log.Trace("Running CGI script ", path)
+					h.ServeHTTP(w, r)
+				})))
 
 	if !ws.Config.UseCaddy {
 		log.Info("Serving static files without Caddy")

@@ -13,8 +13,13 @@ import (
 	ws "rushsteve1.us/monolith/webserver"
 )
 
+type StoredService struct {
+	Service shared.Service
+	Token   suture.ServiceToken
+}
+
 var TopSup *suture.Supervisor
-var ServiceMap = map[string]suture.ServiceToken{}
+var ServiceMap map[string]StoredService
 
 func main() {
 	cfg := shared.ConfigFromArgs()
@@ -32,6 +37,7 @@ func main() {
 		log.Fatal("Only SQLite is supported right now")
 	}
 
+	ServiceMap = make(map[string]StoredService)
 	services := []shared.Service{
 		&Overseer{Config: cfg},
 		&Cron{Config: cfg},
@@ -40,7 +46,8 @@ func main() {
 	}
 
 	for _, serv := range services {
-		ServiceMap[serv.Name()] = TopSup.Add(serv)
+		token := TopSup.Add(serv)
+		ServiceMap[serv.Name()] = StoredService{Service: serv, Token: token}
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())

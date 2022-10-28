@@ -17,6 +17,13 @@ type SwissArmyBot struct {
 }
 
 func (sab *SwissArmyBot) Serve(ctx context.Context) error {
+	var err error
+
+	err = createTables(sab.Database, ctx)
+	if err != nil {
+		return err
+	}
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/hello",
 		func(w http.ResponseWriter, r *http.Request) {

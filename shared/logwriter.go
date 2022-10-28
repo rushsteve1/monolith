@@ -22,12 +22,12 @@ func (lw LogWriter) Write(b []byte) (int, error) {
 func (lw LogWriter) WriteHeader(statusCode int) {
 	log.WithFields(
 		log.Fields{
-			"url":     lw.r.URL,
+			"path":    lw.r.URL.Path,
 			"method":  lw.r.Method,
 			"remote":  lw.r.RemoteAddr,
 			"service": lw.name,
 			"status":  statusCode,
-		}).Info("HTTP Request")
+		}).Trace("HTTP Request")
 	lw.w.WriteHeader(statusCode)
 }
 
