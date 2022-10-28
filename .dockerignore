@@ -1,0 +1,6 @@
+.git
+config.example.json
+socon/
+hotload.sh
+**/README.md
+.vscode
