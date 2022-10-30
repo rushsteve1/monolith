@@ -41,6 +41,7 @@ type WebServerCfg struct {
 
 type Config struct {
 	UseCaddy     bool            `json:"caddy"`
+	LogLevel     int             `json:"loglevel"`
 	Database     DatabaseCfg     `json:"database"`
 	Overseer     OverseerCfg     `json:"overseer"`
 	SwissArmyBot SwissArmyBotCfg `json:"swissarmybot"`

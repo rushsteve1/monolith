@@ -6,7 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Steve's Website - {{ block "title" . }}{{ end }}</title>
 
+    <link rel="shortcut icon" href="/static/logo.svg" type="image/svg+xml">
+
     <link rel="stylesheet" href="/static/bolt.css">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
@@ -16,7 +19,9 @@
     <main role="main">
         {{ block "main" . }}{{ end }}
     </main>
-    <footer></footer>
+    <footer>
+        Copyright &copy; Steven vanZyl MMXXII
+    </footer>
 </body>
 
 </html>

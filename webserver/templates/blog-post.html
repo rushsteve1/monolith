@@ -1,0 +1,11 @@
+{{ template "layout" . }}
+
+{{ define "title" }}{{ .Title }}{{ end }}
+
+{{ define "main" }}
+<a href="/blog">Back</a>
+<article>
+    <h2>{{ .Title }}</h2>
+    {{ safe .Body }}
+</article>
+{{ end }}

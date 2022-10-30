@@ -1,0 +1,13 @@
+{{ template "layout" . }}
+
+{{ define "title" }}Blog{{ end }}
+
+{{ define "main" }}
+<h2>Blog</h2>
+<ul>
+{{ range $post := . }}
+<a href="/blog?id={{ $post.ID }}">{{ $post.Title }}</a>
+{{ end }}
+</ul>
+{{ end }}
+

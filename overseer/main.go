@@ -24,6 +24,8 @@ var ServiceMap map[string]StoredService
 func main() {
 	cfg := shared.ConfigFromArgs()
 
+	log.SetLevel(log.Level(cfg.LogLevel))
+
 	TopSup = suture.NewSimple("overseer")
 
 	var db *sql.DB

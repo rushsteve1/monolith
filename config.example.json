@@ -1,5 +1,6 @@
 {
     "caddy": true,
+    "loglevel": 3,
     "database": {
         "sqlite": false,
         "uri": "localhost:5432",

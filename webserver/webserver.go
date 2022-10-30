@@ -3,15 +3,16 @@ package webserver
 import (
 	"context"
 	"database/sql"
+	"embed"
 	"fmt"
-	stdlog "log"
-	"net/http"
-	"net/http/cgi"
-	"path/filepath"
 
 	log "github.com/sirupsen/logrus"
 	"rushsteve1.us/monolith/shared"
 )
+
+//go:embed templates/*.html
+var templatesFS embed.FS
+var loadedTemplates *shared.TemplateHelper
 
 type WebServer struct {
 	Config   shared.Config
@@ -20,48 +21,22 @@ type WebServer struct {
 }
 
 func (ws *WebServer) Serve(ctx context.Context) error {
-	err := loadTemplates()
+	var err error
+	loadedTemplates, err = shared.LoadTemplates(templatesFS, "templates", "layout.html")
 	if err != nil {
 		return err
 	}
 
-	err = createTables(ws.Database, ctx)
-	if err != nil {
-		return err
+	if ws.Database != nil {
+		err = createTables(ws.Database, ctx)
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Fatal("No database given to ", ws.Name())
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/",
-		func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path != "/" {
-				http.NotFound(w, r)
-				return
-			}
-
-			err := templates.ExecuteTemplate(w, "index.html", nil)
-			if err != nil {
-				http.Error(w, err.Error(), 500)
-			}
-		})
-
-	mux.Handle(
-		"/cgi-bin/",
-		http.StripPrefix("/cgi-bin/",
-			http.HandlerFunc(
-				func(w http.ResponseWriter, r *http.Request) {
-					path := filepath.Join(ws.Config.WebServer.CgiPath, r.URL.Path)
-					l := stdlog.New(log.StandardLogger().WriterLevel(log.ErrorLevel), "", 0)
-					h := &cgi.Handler{Path: path, Root: "/cgi-bin/", Logger: l}
-					log.Trace("Running CGI script ", path)
-					h.ServeHTTP(w, r)
-				})))
-
-	if !ws.Config.UseCaddy {
-		log.Info("Serving static files without Caddy")
-		mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(ws.Config.WebServer.StaticPath))))
-	}
-
-	return shared.ServeHelper(mux, ws)
+	return shared.ServeHelper(GetMux(ws, ctx), ws)
 }
 
 func (ws WebServer) Addr() string {

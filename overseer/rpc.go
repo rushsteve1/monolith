@@ -1,11 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"math/rand"
 	"strings"
 
 	"rushsteve1.us/monolith/shared"
+	"rushsteve1.us/monolith/webserver"
 )
 
 type OverseerRpc struct {
@@ -22,38 +23,89 @@ func (ov *OverseerRpc) DBPath(_ int, out *string) error {
 	return nil
 }
 
-var testingPosts = map[string]string{
-	"1": "hello",
-}
-
-func (ov *OverseerRpc) ListBlog(_ int, out *map[string]string) error {
-	*out = make(map[string]string, len(testingPosts))
-	for k, v := range testingPosts {
-		if len(v) > 20 {
-			v = v[:20] + "…"
-		}
-		(*out)[k] = strings.TrimSpace(v)
+func (ov *OverseerRpc) ListBlog(_ int, out *map[int64]string) error {
+	ws, ok := ServiceMap["WebServer"].Service.(*webserver.WebServer)
+	if !ok {
+		return fmt.Errorf("Could not cast to WebServer")
 	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	posts, err := webserver.ListPosts(ws.Database, ctx)
+	if err != nil {
+		return err
+	}
+
+	*out = make(map[int64]string, len(posts))
+	for _, post := range posts {
+		(*out)[post.ID] = post.Title
+	}
+
 	return nil
 }
 
-func (ov *OverseerRpc) GetBlogPost(id string, out *string) error {
-	*out = testingPosts[id]
+func (ov *OverseerRpc) GetBlogPost(id int64, out *string) error {
+	ws, ok := ServiceMap["WebServer"].Service.(*webserver.WebServer)
+	if !ok {
+		return fmt.Errorf("Could not cast to WebServer")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	post, err := webserver.GetPost(ws.Database, ctx, id)
+	if err != nil {
+		return err
+	}
+
+	*out = post.Title + "\n---\n" + post.Body
 	return nil
 }
 
 func (ov *OverseerRpc) SetBlogPost(data struct {
-	Id   string
+	Id   int64
 	Body string
 }, out *int) error {
-	testingPosts[data.Id] = data.Body
+	ws, ok := ServiceMap["WebServer"].Service.(*webserver.WebServer)
+	if !ok {
+		return fmt.Errorf("Could not cast to WebServer")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	v := strings.Split(data.Body, "\n---\n")
+	title := v[0]
+	body := v[1]
+
+	err := webserver.UpdatePost(ws.Database, ctx, data.Id, title, body)
+	if err != nil {
+		return err
+	}
+
 	*out = 0
 	return nil
 }
 
-func (ov *OverseerRpc) NewBlogPost(body string, out *string) error {
-	id := fmt.Sprint(rand.Int() % 100)
-	testingPosts[id] = body
-	*out = id
+func (ov *OverseerRpc) NewBlogPost(body string, out *int) error {
+	ws, ok := ServiceMap["WebServer"].Service.(*webserver.WebServer)
+	if !ok {
+		return fmt.Errorf("Could not cast to WebServer")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	v := strings.Split(body, "\n---\n")
+	title := v[0]
+	body = v[1]
+
+	err := webserver.InsertPost(ws.Database, ctx, title, body)
+	if err != nil {
+		return err
+	}
+
+	*out = 0
 	return nil
 }

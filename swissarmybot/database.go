@@ -3,18 +3,24 @@ package swissarmybot
 import (
 	"context"
 	"database/sql"
-	"embed"
 )
 
-//go:embed sql
-var sqlFiles embed.FS
+const createTablesSql = `
+PRAGMA foreign_keys = ON;
+PRAGMA journal_mode = WAL;
+
+CREATE TABLE IF NOT EXISTS quotes (
+       id INTEGER PRIMARY KEY NOT NULL,
+       text TEXT NOT NULL,
+       user_id INTEGER NOT NULL,
+       user_name TEXT NOT NULL,
+       author_id INTEGER NOT NULL,
+       author_name TEXT NOT NULL,
+       inserted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);`
 
 func createTables(db *sql.DB, ctx context.Context) error {
-	sqlText, err := sqlFiles.ReadFile("sql/create_tables.sql")
-	if err != nil {
-		return err
-	}
-	_, err = db.ExecContext(ctx, string(sqlText))
+	_, err := db.ExecContext(ctx, createTablesSql)
 	if err != nil {
 		return err
 	}

@@ -6,6 +6,7 @@ import (
 	"net/rpc"
 	"os"
 	"os/exec"
+	"strconv"
 
 	"github.com/urfave/cli/v2"
 )
@@ -17,7 +18,7 @@ func listBlog(ctx *cli.Context) error {
 	}
 	defer client.Close()
 
-	var reply map[string]string
+	var reply map[int64]string
 	err = client.Call("Overseer.ListBlog", 0, &reply)
 	if err != nil {
 		return err
@@ -25,7 +26,7 @@ func listBlog(ctx *cli.Context) error {
 
 	fmt.Printf("ID\tText\n---------------------\n")
 	for id, short := range reply {
-		fmt.Printf("%s\t%s\n", id, short)
+		fmt.Printf("%d\t%s\n", id, short)
 	}
 
 	return nil
@@ -39,7 +40,10 @@ func editBlogPost(ctx *cli.Context) error {
 	}
 	defer client.Close()
 
-	id := ctx.Args().First()
+	id, err := strconv.Atoi(ctx.Args().First())
+	if err != nil {
+		return err
+	}
 
 	var reply string
 	err = client.Call("Overseer.GetBlogPost", id, &reply)
@@ -51,7 +55,7 @@ func editBlogPost(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer os.Remove(file.Name())
 
 	_, err = file.WriteString(reply)
 	if err != nil {
@@ -79,9 +83,9 @@ func editBlogPost(ctx *cli.Context) error {
 
 	var out int
 	return client.Call("Overseer.SetBlogPost", struct {
-		Id   string
+		Id   int64
 		Body string
-	}{Id: id, Body: string(body)}, &out)
+	}{Id: int64(id), Body: string(body)}, &out)
 }
 
 func newBlogPost(ctx *cli.Context) error {
@@ -91,11 +95,14 @@ func newBlogPost(ctx *cli.Context) error {
 	}
 	defer client.Close()
 
-	file, err := os.CreateTemp("", "monolith-blog-")
+	file, err := os.CreateTemp("", "monolith-blog-*.html")
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer os.Remove(file.Name())
+
+	file.WriteString("Title Here\n---\nBody Here")
+	file.Seek(0, 0)
 
 	path, err := exec.LookPath(os.Getenv("EDITOR"))
 	if err != nil {
@@ -115,11 +122,6 @@ func newBlogPost(ctx *cli.Context) error {
 		return err
 	}
 
-	var id string
-	err = client.Call("Overseer.NewBlogPost", string(body), &id)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("New blog post created with ID %s", id)
-	return nil
+	var out int
+	return client.Call("Overseer.NewBlogPost", string(body), &out)
 }
