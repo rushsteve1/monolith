@@ -32,7 +32,7 @@ func (ov *OverseerRpc) ListBlog(_ int, out *map[int64]string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	posts, err := webserver.ListPosts(ws.Database, ctx)
+	posts, err := webserver.ListPosts(ws.DBConn(), ctx)
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func (ov *OverseerRpc) GetBlogPost(id int64, out *string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	post, err := webserver.GetPost(ws.Database, ctx, id)
+	post, err := webserver.GetPost(ws.DBConn(), ctx, id)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (ov *OverseerRpc) SetBlogPost(data struct {
 	title := v[0]
 	body := v[1]
 
-	err := webserver.UpdatePost(ws.Database, ctx, data.Id, title, body)
+	err := webserver.UpdatePost(ws.DBConn(), ctx, data.Id, title, body)
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func (ov *OverseerRpc) NewBlogPost(body string, out *int) error {
 	title := v[0]
 	body = v[1]
 
-	err := webserver.InsertPost(ws.Database, ctx, title, body)
+	err := webserver.InsertPost(ws.DBConn(), ctx, title, body)
 	if err != nil {
 		return err
 	}

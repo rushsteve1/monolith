@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS quotes (
        inserted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );`
 
-func createTables(db *sql.DB, ctx context.Context) error {
+func createTables(db *sql.Conn, ctx context.Context) error {
 	_, err := db.ExecContext(ctx, createTablesSql)
 	if err != nil {
 		return err

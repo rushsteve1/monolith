@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS kayvee (
     value JSONB
 );`
 
-func createTables(db *sql.DB, ctx context.Context) error {
+func createTables(db *sql.Conn, ctx context.Context) error {
 	_, err := db.ExecContext(ctx, createTablesSql)
 	if err != nil {
 		return err
@@ -41,7 +41,7 @@ func createTables(db *sql.DB, ctx context.Context) error {
 	return nil
 }
 
-func ListPosts(db *sql.DB, ctx context.Context) ([]BlogPost, error) {
+func ListPosts(db *sql.Conn, ctx context.Context) ([]BlogPost, error) {
 	rows, err := db.QueryContext(ctx, "SELECT * FROM blog;")
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func ListPosts(db *sql.DB, ctx context.Context) ([]BlogPost, error) {
 	return posts, nil
 }
 
-func GetPost(db *sql.DB, ctx context.Context, id int64) (BlogPost, error) {
+func GetPost(db *sql.Conn, ctx context.Context, id int64) (BlogPost, error) {
 	var post BlogPost
 	row := db.QueryRowContext(ctx, "SELECT * FROM blog WHERE id = ?;", id)
 	if row.Err() != nil {
@@ -75,22 +75,22 @@ func GetPost(db *sql.DB, ctx context.Context, id int64) (BlogPost, error) {
 	return post, err
 }
 
-func InsertPost(db *sql.DB, ctx context.Context, title string, body string) error {
+func InsertPost(db *sql.Conn, ctx context.Context, title string, body string) error {
 	_, err := db.ExecContext(ctx, "INSERT INTO blog (title, body) VALUES (?, ?);", title, body)
 	return err
 }
 
-func ChangePublished(db *sql.DB, ctx context.Context, id int64, published bool) error {
+func ChangePublished(db *sql.Conn, ctx context.Context, id int64, published bool) error {
 	_, err := db.ExecContext(ctx, "UPDATE blog SET published = ?, updated_at = ? WHERE id = ?;", published, time.Now(), id)
 	return err
 }
 
-func UpdatePost(db *sql.DB, ctx context.Context, id int64, title string, body string) error {
+func UpdatePost(db *sql.Conn, ctx context.Context, id int64, title string, body string) error {
 	_, err := db.ExecContext(ctx, "UPDATE blog SET title = ?, body = ?, updated_at = ? WHERE id = ?;", title, body, time.Now(), id)
 	return err
 }
 
-func DeletePost(db *sql.DB, ctx context.Context, id int64) error {
+func DeletePost(db *sql.Conn, ctx context.Context, id int64) error {
 	_, err := db.ExecContext(ctx, "DEELETE FROM blog WHERE id = ?;", id)
 	return err
 }

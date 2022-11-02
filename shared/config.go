@@ -23,9 +23,9 @@ func (db DatabaseCfg) String() string {
 }
 
 type OverseerCfg struct {
-	Addr string `json:"addr"`
-	Fcgi bool   `json:"fcgi"`
-	Rpc  bool   `json:"rpc"`
+	Addr  string `json:"addr"`
+	Rpc   bool   `json:"rpc"`
+	Debug bool   `json:"debug"`
 }
 
 type SwissArmyBotCfg struct {
@@ -41,6 +41,7 @@ type WebServerCfg struct {
 
 type Config struct {
 	UseCaddy     bool            `json:"caddy"`
+	UseFcgi      bool            `json:"fcgi"`
 	LogLevel     int             `json:"loglevel"`
 	Database     DatabaseCfg     `json:"database"`
 	Overseer     OverseerCfg     `json:"overseer"`

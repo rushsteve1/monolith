@@ -15,20 +15,30 @@ var templatesFS embed.FS
 var loadedTemplates *shared.TemplateHelper
 
 type WebServer struct {
-	Config   shared.Config
-	Fcgi     bool
-	Database *sql.DB
+	config shared.Config
+	dbConn *sql.Conn
+}
+
+func New(ctx context.Context, cfg shared.Config, db *sql.DB) *WebServer {
+	conn, err := db.Conn(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return &WebServer{config: cfg, dbConn: conn}
 }
 
 func (ws *WebServer) Serve(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	var err error
 	loadedTemplates, err = shared.LoadTemplates(templatesFS, "templates", "layout.html")
 	if err != nil {
 		return err
 	}
 
-	if ws.Database != nil {
-		err = createTables(ws.Database, ctx)
+	if ws.dbConn != nil {
+		err = createTables(ws.dbConn, ctx)
 		if err != nil {
 			return err
 		}
@@ -36,11 +46,12 @@ func (ws *WebServer) Serve(ctx context.Context) error {
 		log.Fatal("No database given to ", ws.Name())
 	}
 
+	defer ws.dbConn.Close()
 	return shared.ServeHelper(GetMux(ws, ctx), ws)
 }
 
 func (ws WebServer) Addr() string {
-	return ws.Config.WebServer.Addr
+	return ws.config.WebServer.Addr
 }
 
 func (ws WebServer) Name() string {
@@ -48,9 +59,13 @@ func (ws WebServer) Name() string {
 }
 
 func (ws WebServer) UseFcgi() bool {
-	return ws.Fcgi
+	return ws.config.UseFcgi
 }
 
 func (ws WebServer) String() string {
 	return fmt.Sprintf("%s on %s", ws.Name(), ws.Addr())
+}
+
+func (ws WebServer) DBConn() *sql.Conn {
+	return ws.dbConn
 }

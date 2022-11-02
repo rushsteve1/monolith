@@ -16,19 +16,19 @@ func GetMux(ws *WebServer, ctx context.Context) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", indexHandler)
 
-	mux.HandleFunc("/blog", blogHandler(ws.Database, ctx))
+	mux.HandleFunc("/blog", blogHandler(ws.dbConn, ctx))
 
 	mux.Handle("/cgi-bin/",
 		http.StripPrefix("/cgi-bin/",
 			http.HandlerFunc(
-				cgiHandler(ws.Config.WebServer.CgiPath))))
+				cgiHandler(ws.config.WebServer.CgiPath))))
 
-	if !ws.Config.UseCaddy {
+	if !ws.config.UseCaddy {
 		log.Info("Serving static files without Caddy")
 		mux.Handle("/static/",
 			http.StripPrefix("/static/",
 				http.FileServer(
-					http.Dir(ws.Config.WebServer.StaticPath))))
+					http.Dir(ws.config.WebServer.StaticPath))))
 	}
 
 	return mux
@@ -57,7 +57,7 @@ func cgiHandler(cgiPath string) http.HandlerFunc {
 	}
 }
 
-func blogHandler(db *sql.DB, ctx context.Context) http.HandlerFunc {
+func blogHandler(db *sql.Conn, ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.URL.Query().Get("id")
 		if len(id) > 0 {

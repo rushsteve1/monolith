@@ -1,6 +1,7 @@
 {
     "caddy": true,
     "loglevel": 3,
+    "fcgi": false,
     "database": {
         "sqlite": false,
         "uri": "localhost:5432",
@@ -9,8 +10,8 @@
     },
     "overseer": {
         "addr": ":9900",
-        "fcgi": false,
-        "rpc": true
+        "rpc": true,
+        "debug": false
     },
     "webserver": {
         "addr": ":9901",

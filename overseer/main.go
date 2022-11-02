@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/thejerf/suture/v4"
@@ -22,6 +23,8 @@ var TopSup *suture.Supervisor
 var ServiceMap map[string]StoredService
 
 func main() {
+	log.Info("Starting Monolith Overseer")
+
 	cfg := shared.ConfigFromArgs()
 
 	log.SetLevel(log.Level(cfg.LogLevel))
@@ -35,26 +38,40 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to connect to database: %v", err)
 		}
+		db.SetMaxOpenConns(1)
+		db.SetMaxIdleConns(8)
 	} else {
 		log.Fatal("Only SQLite is supported right now")
 	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	pingCtx, pingCancel := context.WithTimeout(ctx, time.Duration(10_000))
+	err := db.PingContext(pingCtx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer pingCancel()
+
+	log.Trace("Connected to Database")
 
 	ServiceMap = make(map[string]StoredService)
 	services := []shared.Service{
 		&Overseer{Config: cfg},
 		&Cron{Config: cfg},
-		&ws.WebServer{Config: cfg, Fcgi: cfg.Overseer.Fcgi, Database: db},
-		&sab.SwissArmyBot{Config: cfg, Fcgi: cfg.Overseer.Fcgi, Database: db},
+		ws.New(ctx, cfg, db),
+		sab.New(ctx, cfg, db),
 	}
+
+	log.Trace("Starting services...")
 
 	for _, serv := range services {
 		token := TopSup.Add(serv)
 		ServiceMap[serv.Name()] = StoredService{Service: serv, Token: token}
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	TopSup.Serve(ctx)
+	log.Error(TopSup.Serve(ctx))
 
-	log.Warn("Top level supervisior exited unexpectedly")
 	cancel()
+	log.Fatal("Top level supervisior exited unexpectedly, this is a hard-crash scenario")
 }

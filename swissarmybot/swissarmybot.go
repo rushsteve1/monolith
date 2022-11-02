@@ -7,19 +7,28 @@ import (
 	"io"
 	"net/http"
 
+	log "github.com/sirupsen/logrus"
 	"rushsteve1.us/monolith/shared"
 )
 
 type SwissArmyBot struct {
-	Config   shared.Config
-	Fcgi     bool
-	Database *sql.DB
+	config shared.Config
+	dbConn *sql.Conn
+}
+
+func New(ctx context.Context, cfg shared.Config, db *sql.DB) *SwissArmyBot {
+	conn, err := db.Conn(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return &SwissArmyBot{config: cfg, dbConn: conn}
 }
 
 func (sab *SwissArmyBot) Serve(ctx context.Context) error {
-	var err error
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
-	err = createTables(sab.Database, ctx)
+	err := createTables(sab.dbConn, ctx)
 	if err != nil {
 		return err
 	}
@@ -30,11 +39,12 @@ func (sab *SwissArmyBot) Serve(ctx context.Context) error {
 			io.WriteString(w, "SAB is running\n")
 		})
 
+	defer sab.dbConn.Close()
 	return shared.ServeHelper(mux, sab)
 }
 
 func (sab SwissArmyBot) Addr() string {
-	return sab.Config.SwissArmyBot.Addr
+	return sab.config.SwissArmyBot.Addr
 }
 
 func (sab SwissArmyBot) Name() string {
@@ -42,7 +52,7 @@ func (sab SwissArmyBot) Name() string {
 }
 
 func (sab SwissArmyBot) UseFcgi() bool {
-	return sab.Fcgi
+	return sab.config.UseFcgi
 }
 
 func (sab SwissArmyBot) String() string {
