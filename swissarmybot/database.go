@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS quotes (
 	user_name   TEXT NOT NULL,
 	author_id   INTEGER NOT NULL,
 	author_name TEXT NOT NULL,
-	server_id   INTEGER NOT NULL
+	server_id   INTEGER NOT NULL,
 	inserted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );`
 

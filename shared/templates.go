@@ -39,7 +39,7 @@ func LoadTemplates(fs embed.FS, dir string, layout string) (*TemplateHelper, err
 
 		t, err := base.ParseFS(fs, filepath.Join(dir, file.Name()), filepath.Join(dir, layout))
 		if err != nil {
-			return nil, fmt.Errorf("Failed to load templates: %v", err)
+			return nil, fmt.Errorf("Failed to load templates: %w", err)
 		}
 
 		th.inner[file.Name()] = t.Lookup(file.Name())

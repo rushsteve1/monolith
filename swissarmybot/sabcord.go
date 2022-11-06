@@ -6,12 +6,13 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	log "github.com/sirupsen/logrus"
+	"github.com/thejerf/suture/v4"
 	"rushsteve1.us/monolith/shared"
 )
 
 type SwissArmyBotDiscord struct {
-	config shared.Config
-	db     *sql.DB
+	config  shared.Config
+	db      *sql.DB
 	session *discordgo.Session
 }
 
@@ -20,6 +21,11 @@ func (sab *SwissArmyBotDiscord) Serve(ctx context.Context) error {
 	setupOnce.Do(func() { err = setup(sab.db, ctx) })
 	if err != nil {
 		return err
+	}
+
+	if len(sab.config.SwissArmyBot.Token) < 32 {
+		log.Error("Discord bot token is invalid, bot will not start")
+		return suture.ErrDoNotRestart
 	}
 
 	sab.session, err = discordgo.New("Bot " + sab.config.SwissArmyBot.Token)
@@ -32,7 +38,7 @@ func (sab *SwissArmyBotDiscord) Serve(ctx context.Context) error {
 		log.Infof("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)
 	})
 
-	sab.session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate){
+	sab.session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		// TODO
 		log.Tracef("%#v", i)
 	})
@@ -67,6 +73,6 @@ func (sab SwissArmyBotDiscord) String() string {
 }
 
 func (sab SwissArmyBotDiscord) cleanup() {
-	// TODO	
+	// TODO
 	log.Info("Cleaning up commands")
 }
