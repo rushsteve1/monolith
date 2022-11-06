@@ -13,3 +13,8 @@ type Service interface {
 	Name() string
 	UseFcgi() bool
 }
+
+type StoredService struct {
+	Service Service
+	Token   suture.ServiceToken
+}

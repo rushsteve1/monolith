@@ -31,6 +31,7 @@ type OverseerCfg struct {
 type SwissArmyBotCfg struct {
 	Addr  string `json:"addr"`
 	Token string `json:"token"`
+	Cleanup bool `json:"cleanup"`
 }
 
 type WebServerCfg struct {

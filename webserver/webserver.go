@@ -16,15 +16,11 @@ var loadedTemplates *shared.TemplateHelper
 
 type WebServer struct {
 	config shared.Config
-	dbConn *sql.Conn
+	db     *sql.DB
 }
 
 func New(ctx context.Context, cfg shared.Config, db *sql.DB) *WebServer {
-	conn, err := db.Conn(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return &WebServer{config: cfg, dbConn: conn}
+	return &WebServer{config: cfg, db: db}
 }
 
 func (ws *WebServer) Serve(ctx context.Context) error {
@@ -37,16 +33,22 @@ func (ws *WebServer) Serve(ctx context.Context) error {
 		return err
 	}
 
-	if ws.dbConn != nil {
-		err = createTables(ws.dbConn, ctx)
-		if err != nil {
-			return err
-		}
-	} else {
+	if ws.db == nil {
 		log.Fatal("No database given to ", ws.Name())
 	}
 
-	defer ws.dbConn.Close()
+	conn, err := ws.db.Conn(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	err = createTables(conn, ctx)
+	if err != nil {
+		return err
+	}
+	conn.Close()
+
 	return shared.ServeHelper(GetMux(ws, ctx), ws)
 }
 
@@ -66,6 +68,6 @@ func (ws WebServer) String() string {
 	return fmt.Sprintf("%s on %s", ws.Name(), ws.Addr())
 }
 
-func (ws WebServer) DBConn() *sql.Conn {
-	return ws.dbConn
+func (ws WebServer) DBConn(ctx context.Context) (*sql.Conn, error) {
+	return ws.db.Conn(ctx)
 }

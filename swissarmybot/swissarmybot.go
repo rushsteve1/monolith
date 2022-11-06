@@ -3,58 +3,41 @@ package swissarmybot
 import (
 	"context"
 	"database/sql"
-	"fmt"
-	"io"
-	"net/http"
+	"sync"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/thejerf/suture/v4"
 	"rushsteve1.us/monolith/shared"
 )
 
-type SwissArmyBot struct {
-	config shared.Config
-	dbConn *sql.Conn
+func NewSupervisor(ctx context.Context, cfg shared.Config, db *sql.DB) (*suture.Supervisor, map[string]shared.StoredService) {
+	sabWeb := SwissArmyBotWeb{config: cfg, db: db}
+	sabCord := SwissArmyBotDiscord{config: cfg, db: db}
+
+	sabSup := suture.NewSimple("SwissArmyBot")
+	servMap := make(map[string]shared.StoredService, 2)
+
+	servMap[sabWeb.Name()] = shared.StoredService{Service: &sabWeb, Token: sabSup.Add(&sabWeb)}
+	servMap[sabCord.Name()] = shared.StoredService{Service: &sabCord, Token: sabSup.Add(&sabCord)}
+
+	return sabSup, servMap
 }
 
-func New(ctx context.Context, cfg shared.Config, db *sql.DB) *SwissArmyBot {
-	conn, err := db.Conn(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return &SwissArmyBot{config: cfg, dbConn: conn}
-}
+var setupOnce sync.Once
 
-func (sab *SwissArmyBot) Serve(ctx context.Context) error {
+func setup(db *sql.DB, ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	err := createTables(sab.dbConn, ctx)
+	conn, err := db.Conn(ctx)
 	if err != nil {
 		return err
 	}
+	defer conn.Close()
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/hello",
-		func(w http.ResponseWriter, r *http.Request) {
-			io.WriteString(w, "SAB is running\n")
-		})
-
-	defer sab.dbConn.Close()
-	return shared.ServeHelper(mux, sab)
-}
-
-func (sab SwissArmyBot) Addr() string {
-	return sab.config.SwissArmyBot.Addr
-}
-
-func (sab SwissArmyBot) Name() string {
-	return "SwissArmyBot"
-}
-
-func (sab SwissArmyBot) UseFcgi() bool {
-	return sab.config.UseFcgi
-}
-
-func (sab SwissArmyBot) String() string {
-	return fmt.Sprintf("%s on %s", sab.Name(), sab.Addr())
+	err = createTables(conn, ctx)
+	if err != nil {
+		return err
+	}
+	conn.Close()
+	return nil
 }

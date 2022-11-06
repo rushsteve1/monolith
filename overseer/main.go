@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/thejerf/suture/v4"
@@ -14,13 +13,8 @@ import (
 	ws "rushsteve1.us/monolith/webserver"
 )
 
-type StoredService struct {
-	Service shared.Service
-	Token   suture.ServiceToken
-}
-
 var TopSup *suture.Supervisor
-var ServiceMap map[string]StoredService
+var ServiceMap map[string]shared.StoredService
 
 func main() {
 	log.Info("Starting Monolith Overseer")
@@ -46,29 +40,27 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	pingCtx, pingCancel := context.WithTimeout(ctx, time.Duration(10_000))
-	err := db.PingContext(pingCtx)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer pingCancel()
-
 	log.Trace("Connected to Database")
 
-	ServiceMap = make(map[string]StoredService)
+	ServiceMap = make(map[string]shared.StoredService)
 	services := []shared.Service{
 		&Overseer{Config: cfg},
 		&Cron{Config: cfg},
 		ws.New(ctx, cfg, db),
-		sab.New(ctx, cfg, db),
 	}
 
 	log.Trace("Starting services...")
 
 	for _, serv := range services {
 		token := TopSup.Add(serv)
-		ServiceMap[serv.Name()] = StoredService{Service: serv, Token: token}
+		ServiceMap[serv.Name()] = shared.StoredService{Service: serv, Token: token}
 	}
+
+	sabSup, servMap := sab.NewSupervisor(ctx, cfg, db)
+	for k, v := range servMap {
+		ServiceMap[k] = v
+	}
+	TopSup.Add(sabSup)
 
 	log.Error(TopSup.Serve(ctx))
 

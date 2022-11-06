@@ -20,29 +20,29 @@ PRAGMA foreign_keys = ON;
 PRAGMA journal_mode = WAL;
 
 CREATE TABLE IF NOT EXISTS blog (
-    id INTEGER PRIMARY KEY NOT NULL,
-	title TEXT NOT NULL,
-    body TEXT NOT NULL,
-    published BOOLEAN NOT NULL DEFAULT false,
-    inserted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+	id INTEGER PRIMARY KEY NOT NULL,
+	title       TEXT NOT NULL,
+	body        TEXT NOT NULL,
+	published   BOOLEAN NOT NULL DEFAULT false,
+	inserted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS kayvee (
-    key VARCHAR(64) PRIMARY KEY NOT NULL,
-    value JSONB
+	key VARCHAR(64) PRIMARY KEY NOT NULL,
+	value JSONB
 );`
 
-func createTables(db *sql.Conn, ctx context.Context) error {
-	_, err := db.ExecContext(ctx, createTablesSql)
+func createTables(conn *sql.Conn, ctx context.Context) error {
+	_, err := conn.ExecContext(ctx, createTablesSql)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func ListPosts(db *sql.Conn, ctx context.Context) ([]BlogPost, error) {
-	rows, err := db.QueryContext(ctx, "SELECT * FROM blog;")
+func ListPosts(conn *sql.Conn, ctx context.Context) ([]BlogPost, error) {
+	rows, err := conn.QueryContext(ctx, "SELECT * FROM blog;")
 	if err != nil {
 		return nil, err
 	}
@@ -57,6 +57,7 @@ func ListPosts(db *sql.Conn, ctx context.Context) ([]BlogPost, error) {
 		}
 		posts = append(posts, post)
 	}
+
 	err = rows.Err()
 	if err != nil {
 		return nil, err
@@ -64,9 +65,9 @@ func ListPosts(db *sql.Conn, ctx context.Context) ([]BlogPost, error) {
 	return posts, nil
 }
 
-func GetPost(db *sql.Conn, ctx context.Context, id int64) (BlogPost, error) {
+func GetPost(conn *sql.Conn, ctx context.Context, id int64) (BlogPost, error) {
 	var post BlogPost
-	row := db.QueryRowContext(ctx, "SELECT * FROM blog WHERE id = ?;", id)
+	row := conn.QueryRowContext(ctx, "SELECT * FROM blog WHERE id = ?;", id)
 	if row.Err() != nil {
 		return post, row.Err()
 	}
@@ -75,22 +76,22 @@ func GetPost(db *sql.Conn, ctx context.Context, id int64) (BlogPost, error) {
 	return post, err
 }
 
-func InsertPost(db *sql.Conn, ctx context.Context, title string, body string) error {
-	_, err := db.ExecContext(ctx, "INSERT INTO blog (title, body) VALUES (?, ?);", title, body)
+func InsertPost(conn *sql.Conn, ctx context.Context, title string, body string) error {
+	_, err := conn.ExecContext(ctx, "INSERT INTO blog (title, body) VALUES (?, ?);", title, body)
 	return err
 }
 
-func ChangePublished(db *sql.Conn, ctx context.Context, id int64, published bool) error {
-	_, err := db.ExecContext(ctx, "UPDATE blog SET published = ?, updated_at = ? WHERE id = ?;", published, time.Now(), id)
+func ChangePublished(conn *sql.Conn, ctx context.Context, id int64, published bool) error {
+	_, err := conn.ExecContext(ctx, "UPDATE blog SET published = ?, updated_at = ? WHERE id = ?;", published, time.Now(), id)
 	return err
 }
 
-func UpdatePost(db *sql.Conn, ctx context.Context, id int64, title string, body string) error {
-	_, err := db.ExecContext(ctx, "UPDATE blog SET title = ?, body = ?, updated_at = ? WHERE id = ?;", title, body, time.Now(), id)
+func UpdatePost(conn *sql.Conn, ctx context.Context, id int64, title string, body string) error {
+	_, err := conn.ExecContext(ctx, "UPDATE blog SET title = ?, body = ?, updated_at = ? WHERE id = ?;", title, body, time.Now(), id)
 	return err
 }
 
-func DeletePost(db *sql.Conn, ctx context.Context, id int64) error {
-	_, err := db.ExecContext(ctx, "DEELETE FROM blog WHERE id = ?;", id)
+func DeletePost(conn *sql.Conn, ctx context.Context, id int64) error {
+	_, err := conn.ExecContext(ctx, "DELETE FROM blog WHERE id = ?;", id)
 	return err
 }

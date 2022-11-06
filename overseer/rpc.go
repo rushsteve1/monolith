@@ -26,13 +26,19 @@ func (ov *OverseerRpc) DBPath(_ int, out *string) error {
 func (ov *OverseerRpc) ListBlog(_ int, out *map[int64]string) error {
 	ws, ok := ServiceMap["WebServer"].Service.(*webserver.WebServer)
 	if !ok {
-		return fmt.Errorf("Could not cast to WebServer")
+		return fmt.Errorf("could not cast to WebServer")
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	posts, err := webserver.ListPosts(ws.DBConn(), ctx)
+	conn, err := ws.DBConn(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	posts, err := webserver.ListPosts(conn, ctx)
 	if err != nil {
 		return err
 	}
@@ -48,13 +54,19 @@ func (ov *OverseerRpc) ListBlog(_ int, out *map[int64]string) error {
 func (ov *OverseerRpc) GetBlogPost(id int64, out *string) error {
 	ws, ok := ServiceMap["WebServer"].Service.(*webserver.WebServer)
 	if !ok {
-		return fmt.Errorf("Could not cast to WebServer")
+		return fmt.Errorf("could not cast to WebServer")
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	post, err := webserver.GetPost(ws.DBConn(), ctx, id)
+	conn, err := ws.DBConn(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	post, err := webserver.GetPost(conn, ctx, id)
 	if err != nil {
 		return err
 	}
@@ -69,7 +81,7 @@ func (ov *OverseerRpc) SetBlogPost(data struct {
 }, out *int) error {
 	ws, ok := ServiceMap["WebServer"].Service.(*webserver.WebServer)
 	if !ok {
-		return fmt.Errorf("Could not cast to WebServer")
+		return fmt.Errorf("could not cast to WebServer")
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -79,7 +91,13 @@ func (ov *OverseerRpc) SetBlogPost(data struct {
 	title := v[0]
 	body := v[1]
 
-	err := webserver.UpdatePost(ws.DBConn(), ctx, data.Id, title, body)
+	conn, err := ws.DBConn(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	err = webserver.UpdatePost(conn, ctx, data.Id, title, body)
 	if err != nil {
 		return err
 	}
@@ -91,7 +109,7 @@ func (ov *OverseerRpc) SetBlogPost(data struct {
 func (ov *OverseerRpc) NewBlogPost(body string, out *int) error {
 	ws, ok := ServiceMap["WebServer"].Service.(*webserver.WebServer)
 	if !ok {
-		return fmt.Errorf("Could not cast to WebServer")
+		return fmt.Errorf("could not cast to WebServer")
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -100,8 +118,14 @@ func (ov *OverseerRpc) NewBlogPost(body string, out *int) error {
 	v := strings.Split(body, "\n---\n")
 	title := v[0]
 	body = v[1]
+	
+	conn, err := ws.DBConn(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
 
-	err := webserver.InsertPost(ws.DBConn(), ctx, title, body)
+	err = webserver.InsertPost(conn, ctx, title, body)
 	if err != nil {
 		return err
 	}

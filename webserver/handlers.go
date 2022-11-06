@@ -16,7 +16,7 @@ func GetMux(ws *WebServer, ctx context.Context) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", indexHandler)
 
-	mux.HandleFunc("/blog", blogHandler(ws.dbConn, ctx))
+	mux.HandleFunc("/blog", blogHandler(ws.db, ctx))
 
 	mux.Handle("/cgi-bin/",
 		http.StripPrefix("/cgi-bin/",
@@ -57,12 +57,22 @@ func cgiHandler(cgiPath string) http.HandlerFunc {
 	}
 }
 
-func blogHandler(db *sql.Conn, ctx context.Context) http.HandlerFunc {
+func blogHandler(db *sql.DB, ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		conn, err := db.Conn(ctx)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+		}
+		defer conn.Close()
+
 		id := r.URL.Query().Get("id")
 		if len(id) > 0 {
 			iid, err := strconv.Atoi(id)
-			post, err := GetPost(db, ctx, int64(iid))
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+			}
+
+			post, err := GetPost(conn, ctx, int64(iid))
 			if err != nil {
 				http.Error(w, err.Error(), 500)
 				log.Error(err)
@@ -75,7 +85,7 @@ func blogHandler(db *sql.Conn, ctx context.Context) http.HandlerFunc {
 			return
 		}
 
-		posts, err := ListPosts(db, ctx)
+		posts, err := ListPosts(conn, ctx)
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 			log.Error(err)

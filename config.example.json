@@ -20,6 +20,7 @@
     },
     "swissarmybot": {
         "addr": ":9902",
-        "token": ""
+        "token": "",
+        "cleanup": false
     }
 }
